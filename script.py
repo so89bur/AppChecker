@@ -43,7 +43,7 @@ async def check_cache():
 @app_checker.check_health
 async def check_cache1():
     await asyncio.sleep(1)  # Симуляция времени выполнения проверки
-    return True  # Успешная проверка
+    return False  # Успешная проверка
 
 
 async def main():

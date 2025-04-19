@@ -44,7 +44,7 @@ class AppChecker:
             print(message)
 
     async def run_checks(self) -> None:
-        self.display_message(self.on_center("check starts"))
+        self._display_message(self._on_center("check starts"))
         self._log(f"collected {len(self._checks)} items")
         self._log()
         for check in self._checks:
@@ -52,7 +52,7 @@ class AppChecker:
             name: str = check.__name__
 
             self._log(f"Starting {name}...")
-            result = await self.load_with_halo(check)
+            result = await self._load_with_halo(check)
 
             self._results.append({"name": name, "success": result})
 
@@ -63,9 +63,9 @@ class AppChecker:
                 self._spinner.fail(f"[FAILURE] {name}")
                 self._failure += 1
 
-        self.display_results()
+        self._display_results()
 
-    async def load_with_halo(self, check_func: Callable[[], Any]) -> bool:
+    async def _load_with_halo(self, check_func: Callable[[], Any]) -> bool:
         with Halo(text="Loading", spinner="dots", enabled=(not self.silent_mode)):
             try:
                 result: bool = await check_func()
@@ -75,42 +75,42 @@ class AppChecker:
                 return False
         return result
 
-    def display_results(self) -> None:
+    def _display_results(self) -> None:
         message: str = f"{self._success} [success]"
-        message = self.set_color(self.on_center(message), bcolors.OKGREEN)
+        message = self._set_color(self._on_center(message), bcolors.OKGREEN)
         if self._failure:
             message = f"{self._failure} [failure]"
-            message = self.set_color(self.on_center(message), bcolors.FAIL)
-            self.display_message(message, bcolors.FAIL)
+            message = self._set_color(self._on_center(message), bcolors.FAIL)
+            self._display_message(message, bcolors.FAIL)
         else:
-            self.display_message(message, bcolors.OKGREEN)
+            self._display_message(message, bcolors.OKGREEN)
 
         if not self._failure:
-            self.display_startup_message("All checks success.")
+            self._display_startup_message("All checks success.")
         elif self._failure == len(self._checks):
-            self.display_startup_message("All checks failed.")
+            self._display_startup_message("All checks failed.")
         else:
-            self.display_startup_message("Some checks failed.")
+            self._display_startup_message("Some checks failed.")
 
-    def display_startup_message(self, message: str) -> None:
+    def _display_startup_message(self, message: str) -> None:
         self._log(message)
 
-    def set_color(self, message: str, color: Optional[str] = None) -> str:
+    def _set_color(self, message: str, color: Optional[str] = None) -> str:
         if color:
             return f"{color}{message}{color}"
         return f"{message}"
 
-    def on_center(self, message: str) -> str:
+    def _on_center(self, message: str) -> str:
         terminal_width: int = shutil.get_terminal_size().columns
         return message.center(terminal_width)
 
-    def display_message(self, message: str, color: Optional[str] = None) -> None:
+    def _display_message(self, message: str, color: Optional[str] = None) -> None:
         terminal_width: int = shutil.get_terminal_size().columns
         dashes: str = "-" * terminal_width
 
-        self._log(self.set_color(dashes, color))
+        self._log(self._set_color(dashes, color))
         self._log(f"{message}")
-        self._log(self.set_color(dashes, color))
+        self._log(self._set_color(dashes, color))
 
     def check_health(self, func: Callable[[], Any]) -> Callable[[], Any]:
 
