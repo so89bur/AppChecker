@@ -1,3 +1,3 @@
-from .appchecker import AppChecker
+from .appchecker import AppChecker, CheckResult
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"

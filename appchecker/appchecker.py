@@ -1,4 +1,5 @@
 import shutil
+import time
 from dataclasses import dataclass
 from functools import wraps
 from typing import Callable, List, Optional, Any
@@ -33,6 +34,8 @@ class AppChecker:
         self._success: int = 0
         self._failure: int = 0
         self._results: List[CheckResult] = []
+        self._process_time = 0
+        self.terminal_width: int = 0
 
     def register_check(self, func: Callable[[], Any]) -> Callable[[], Any]:
         if not callable(func):
@@ -52,6 +55,8 @@ class AppChecker:
             print(message)
 
     async def run_checks(self) -> None:
+        start_time = time.perf_counter()
+        self._terminal_width: int = shutil.get_terminal_size().columns
         self._display_message(self._on_center("check starts"))
         self._log(f"collected {len(self._checks)} items")
         self._log()
@@ -70,7 +75,7 @@ class AppChecker:
             else:
                 self._spinner.fail(f"[FAILURE] {name}")
                 self._failure += 1
-
+        self._process_time = time.perf_counter() - start_time
         self._display_results()
 
     async def _load_with_halo(self, check_func: Callable[[], Any]) -> bool:
@@ -84,13 +89,14 @@ class AppChecker:
         return result
 
     def _display_results(self) -> None:
-        message: str = f"{self._success} [success]"
-        message = self._set_color(self._on_center(message), bcolors.OKGREEN)
+        _time_s = round(self._process_time, 2)
         if self._failure:
-            message = f"{self._failure} [failure]"
+            message = f"{self._failure} [failure] in {_time_s}s"
             message = self._set_color(self._on_center(message), bcolors.FAIL)
             self._display_message(message, bcolors.FAIL)
         else:
+            message: str = f"{self._success} [success] in {_time_s}s"
+            message = self._set_color(self._on_center(message), bcolors.OKGREEN)
             self._display_message(message, bcolors.OKGREEN)
 
         if not self._failure:
@@ -109,12 +115,10 @@ class AppChecker:
         return f"{message}"
 
     def _on_center(self, message: str) -> str:
-        terminal_width: int = shutil.get_terminal_size().columns
-        return message.center(terminal_width)
+        return message.center(self._terminal_width)
 
     def _display_message(self, message: str, color: Optional[str] = None) -> None:
-        terminal_width: int = shutil.get_terminal_size().columns
-        dashes: str = "-" * terminal_width
+        dashes: str = "-" * self._terminal_width
 
         self._log(self._set_color(dashes, color))
         self._log(f"{message}")
