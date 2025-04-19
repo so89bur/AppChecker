@@ -1,12 +1,20 @@
 import shutil
-from typing import Callable, List, Optional, Any
+from dataclasses import dataclass
 from functools import wraps
+from typing import Callable, List, Optional, Any
+
 from halo import Halo
 
 
 class bcolors:
     OKGREEN = "\033[92m"
     FAIL = "\033[91m"
+
+
+@dataclass
+class CheckResult:
+    name: str
+    success: bool
 
 
 class AppChecker:
@@ -24,7 +32,7 @@ class AppChecker:
         )
         self._success: int = 0
         self._failure: int = 0
-        self._results: List[dict] = []
+        self._results: List[CheckResult] = []
 
     def register_check(self, func: Callable[[], Any]) -> Callable[[], Any]:
         if not callable(func):
@@ -33,7 +41,7 @@ class AppChecker:
         self._checks.append(func)
         return func
 
-    def get_results(self) -> List[dict]:
+    def get_results(self) -> List[CheckResult]:
         return self._results
 
     def clear_results(self) -> None:
@@ -54,7 +62,7 @@ class AppChecker:
             self._log(f"Starting {name}...")
             result = await self._load_with_halo(check)
 
-            self._results.append({"name": name, "success": result})
+            self._results.append(CheckResult(name=name, success=result))
 
             if result is True:
                 self._spinner.succeed(f"[SUCCESS] {name}")

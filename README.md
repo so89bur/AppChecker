@@ -100,7 +100,7 @@ async def main():
     results = app_checker.get_results()  # Get the results
 
     for result in results:
-        print(f"{result['name']}: {'Success' if result['success'] else 'Failure'}")
+        print(f"{result.name}: {'Success' if result.success else 'Failure'}")
 
 if __name__ == "__main__":
     asyncio.run(main())  # Start the asyncio event loop
