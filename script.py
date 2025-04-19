@@ -1,7 +1,7 @@
 import asyncio
 
-import asyncpg
-import httpx
+# import asyncpg
+# import httpx
 
 from appchecker.appchecker import AppChecker
 
@@ -34,19 +34,21 @@ app_checker = AppChecker(silent_mode=False)
 #     #     return False
 
 
-@app_checker.check_health
+# @app_checker.check_health
 async def check_cache():
     await asyncio.sleep(2)  # Симуляция времени выполнения проверки
+    return False  # Успешная проверка
+
+
+@app_checker.check_health
+async def check_cache1():
+    await asyncio.sleep(1)  # Симуляция времени выполнения проверки
     return True  # Успешная проверка
 
 
-# @app_checker.check_health
-# async def check_cache1():
-#     await asyncio.sleep(1)  # Симуляция времени выполнения проверки
-#     return True  # Успешная проверка
-
-
 async def main():
+
+    app_checker.register_check(check_cache)
     await app_checker.run_checks()
     results = app_checker.get_results()  # Get the results
 

@@ -12,45 +12,56 @@ class bcolors:
 class AppChecker:
     def __init__(
         self,
-        checks: Optional[List[Callable[[], Any]]] = None,
         silent_mode: bool = False,
     ) -> None:
-        self.checks: List[Callable[[], Any]] = []
+        if not isinstance(silent_mode, bool):
+            raise ValueError("Parameter 'silent_mode' must be a boolean value.")
+
         self.silent_mode = silent_mode
-        self.spinner: Halo = Halo(
+        self._checks: List[Callable[[], Any]] = []
+        self._spinner: Halo = Halo(
             text="Loading", spinner="dots", enabled=(not self.silent_mode)
         )
-        self.success: int = 0
-        self.failure: int = 0
-        self.results: List[dict] = []
+        self._success: int = 0
+        self._failure: int = 0
+        self._results: List[dict] = []
 
     def register_check(self, func: Callable[[], Any]) -> Callable[[], Any]:
-        self.checks.append(func)
+        if not callable(func):
+            raise ValueError("Parameter 'func' must be a callable function.")
+
+        self._checks.append(func)
         return func
 
-    def log(self, message: str = "") -> None:
+    def get_results(self) -> List[dict]:
+        return self._results
+
+    def clear_results(self) -> None:
+        self._results.clear()
+
+    def _log(self, message: str = "") -> None:
         if not self.silent_mode:
             print(message)
 
     async def run_checks(self) -> None:
         self.display_message(self.on_center("check starts"))
-        self.log(f"collected {len(self.checks)} items")
-        self.log()
-        for check in self.checks:
+        self._log(f"collected {len(self._checks)} items")
+        self._log()
+        for check in self._checks:
             result: Optional[bool] = False
             name: str = check.__name__
 
-            self.log(f"Starting {name}...")
+            self._log(f"Starting {name}...")
             result = await self.load_with_halo(check)
 
-            self.results.append({"name": name, "success": result})
+            self._results.append({"name": name, "success": result})
 
             if result is True:
-                self.spinner.succeed(f"[SUCCESS] {name}")
-                self.success += 1
+                self._spinner.succeed(f"[SUCCESS] {name}")
+                self._success += 1
             else:
-                self.spinner.fail(f"[FAILURE] {name}")
-                self.failure += 1
+                self._spinner.fail(f"[FAILURE] {name}")
+                self._failure += 1
 
         self.display_results()
 
@@ -65,24 +76,24 @@ class AppChecker:
         return result
 
     def display_results(self) -> None:
-        message: str = f"{self.success} [success]"
+        message: str = f"{self._success} [success]"
         message = self.set_color(self.on_center(message), bcolors.OKGREEN)
-        if self.failure:
-            message = f"{self.failure} [failure]"
+        if self._failure:
+            message = f"{self._failure} [failure]"
             message = self.set_color(self.on_center(message), bcolors.FAIL)
             self.display_message(message, bcolors.FAIL)
         else:
             self.display_message(message, bcolors.OKGREEN)
 
-        if not self.failure:
+        if not self._failure:
             self.display_startup_message("All checks success.")
-        elif self.failure == len(self.checks):
+        elif self._failure == len(self._checks):
             self.display_startup_message("All checks failed.")
         else:
             self.display_startup_message("Some checks failed.")
 
     def display_startup_message(self, message: str) -> None:
-        self.log(message)
+        self._log(message)
 
     def set_color(self, message: str, color: Optional[str] = None) -> str:
         if color:
@@ -97,9 +108,9 @@ class AppChecker:
         terminal_width: int = shutil.get_terminal_size().columns
         dashes: str = "-" * terminal_width
 
-        self.log(self.set_color(dashes, color))
-        self.log(f"{message}")
-        self.log(self.set_color(dashes, color))
+        self._log(self.set_color(dashes, color))
+        self._log(f"{message}")
+        self._log(self.set_color(dashes, color))
 
     def check_health(self, func: Callable[[], Any]) -> Callable[[], Any]:
 
@@ -108,15 +119,9 @@ class AppChecker:
             try:
                 return await func(*args, **kwargs)
             except Exception as e:
-                self.log()
-                self.log(e)
+                self._log()
+                self._log(e)
                 return False
 
         self.register_check(wrapper)
         return wrapper
-
-    def get_results(self) -> List[dict]:
-        return self.results
-
-    def clear_results(self) -> None:
-        self.results.clear()
