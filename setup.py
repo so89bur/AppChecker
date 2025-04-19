@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="appchecker",
-    version="0.1.6",
+    version="0.1.7",
     packages=find_packages(),
     install_requires=[
         "halo>=0.0.31",
@@ -10,6 +10,7 @@ setup(
     description="Adds healthcheck for PythonApp",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
+    url="https://github.com/so89bur/AppChecker",
     author="Sov Bur",
     classifiers=[
         "Programming Language :: Python :: 3",
