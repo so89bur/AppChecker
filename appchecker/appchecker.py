@@ -34,8 +34,8 @@ class AppChecker:
         self._success: int = 0
         self._failure: int = 0
         self._results: List[CheckResult] = []
-        self._process_time = 0
-        self.terminal_width: int = 0
+        self._process_time: float = 0
+        self._terminal_width: int = 0
 
     def register_check(self, func: Callable[[], Any]) -> Callable[[], Any]:
         if not callable(func):
